@@ -1,0 +1,33 @@
+version: '3'
+
+vars:
+  APP_NAME:
+    sh: echo "${APP_NAME:-$(basename $(pwd))}"
+  APP_VERSION:
+    sh: echo "${APP_VERSION:-$(git rev-parse --abbrev-ref HEAD)}"
+  ARCH:
+    sh: echo "${ARCH:-$(uname -m)}"
+
+includes:
+  app:
+    taskfile: .ci/Taskfile.app.yaml
+    optional: true
+  gen:
+    taskfile: .ci/Taskfile.gen.yaml
+    optional: true
+  lint:
+    taskfile: .ci/Taskfile.lint.yaml
+    optional: true
+  test:
+    taskfile: .ci/Taskfile.test.yaml
+    optional: true
+  docker:
+    taskfile: .ci/Taskfile.docker.yaml
+    optional: true
+
+tasks:
+  init:
+    desc: Initialize environment
+    cmds:
+      - rm -rf .ci
+      - git clone --branch v1 https://github.com/ashep/ci.git .ci

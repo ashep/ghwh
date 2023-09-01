@@ -1,2 +1,1 @@
-# ghwh
-GitHub Webhook Handler
+# GitHub Webhook Handler

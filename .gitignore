@@ -1,0 +1,6 @@
+.ci
+.idea
+/config.yaml
+/tmp
+/vendor
+
