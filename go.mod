@@ -1,6 +1,6 @@
 module github.com/ashep/ghwh
 
-go 1.21
+go 1.21.0
 
 require (
 	github.com/ashep/go-apprun v0.0.0-20230902185436-06877ee10e27
