@@ -2,17 +2,19 @@ package app
 
 import (
 	"context"
-	"log/slog"
+	"fmt"
+
+	"github.com/rs/zerolog"
 
 	"github.com/ashep/ghwh/internal/server"
 )
 
 type App struct {
 	srv *server.Server
-	l   *slog.Logger
+	l   zerolog.Logger
 }
 
-func New(cfg Config, l *slog.Logger) *App {
+func New(cfg Config, l zerolog.Logger) *App {
 	return &App{
 		srv: server.New(cfg.Server, l),
 		l:   l,
@@ -20,5 +22,9 @@ func New(cfg Config, l *slog.Logger) *App {
 }
 
 func (a *App) Run(ctx context.Context) error {
-	return a.srv.Run(ctx)
+	if err := a.srv.Run(ctx); err != nil {
+		return fmt.Errorf("server: %w", err)
+	}
+
+	return nil
 }

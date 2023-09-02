@@ -1,19 +1,20 @@
 package handler
 
 import (
-	"log/slog"
 	"net/http"
+
+	"github.com/rs/zerolog"
 )
 
 type Handler struct {
-	l *slog.Logger
+	l zerolog.Logger
 }
 
-func New(l *slog.Logger) *Handler {
+func New(l zerolog.Logger) *Handler {
 	return &Handler{
 		l: l,
 	}
 }
 
-func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ServeHTTP(_ http.ResponseWriter, _ *http.Request) {
 }

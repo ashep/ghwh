@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"time"
+
+	"github.com/rs/zerolog"
 
 	"github.com/ashep/ghwh/internal/server/handler"
 	"github.com/ashep/ghwh/internal/server/middleware"
@@ -15,10 +16,10 @@ import (
 type Server struct {
 	cfg Config
 	srv *http.Server
-	l   *slog.Logger
+	l   zerolog.Logger
 }
 
-func New(cfg Config, l *slog.Logger) *Server {
+func New(cfg Config, l zerolog.Logger) *Server {
 	hdl := handler.New(l)
 
 	mux := http.NewServeMux()
@@ -42,17 +43,17 @@ func (s *Server) Run(ctx context.Context) error {
 		<-ctx.Done()
 
 		if errF := s.srv.Close(); errF != nil {
-			s.l.Error("server close failed")
+			s.l.Error().Err(errF).Msg("server close failed")
 		}
 	}()
 
-	s.l.Info("starting the server", "addr", s.cfg.Address)
+	s.l.Info().Str("addr", s.cfg.Address).Msg("server is starting")
 
 	if err := s.srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return fmt.Errorf("ListenAndServe failed: %w", err)
 	}
 
-	s.l.Info("server stopped", "addr", s.cfg.Address)
+	s.l.Info().Str("addr", s.cfg.Address).Msg("server stopped")
 
 	return nil
 }
