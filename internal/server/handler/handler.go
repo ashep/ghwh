@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"io"
 	"net/http"
 
 	"github.com/rs/zerolog"
@@ -16,5 +17,21 @@ func New(l zerolog.Logger) *Handler {
 	}
 }
 
-func (h *Handler) ServeHTTP(_ http.ResponseWriter, _ *http.Request) {
+func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	bb, err := io.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		h.l.Error().Err(err).Msg("request body read failed")
+
+		return
+	}
+
+	w.Header().Set("Content-Type", r.Header.Get("Content-Type"))
+
+	if _, err := w.Write(bb); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		h.l.Error().Err(err).Msg("response write failed")
+
+		return
+	}
 }

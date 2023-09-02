@@ -10,19 +10,19 @@ import (
 )
 
 type App struct {
-	srv *server.Server
-	l   zerolog.Logger
+	s *server.Server
+	l zerolog.Logger
 }
 
 func New(cfg Config, l zerolog.Logger) *App {
 	return &App{
-		srv: server.New(cfg.Server, l),
-		l:   l,
+		s: server.New(cfg.Server, l.With().Str("pkg", "server").Logger()),
+		l: l,
 	}
 }
 
 func (a *App) Run(ctx context.Context) error {
-	if err := a.srv.Run(ctx); err != nil {
+	if err := a.s.Run(ctx); err != nil {
 		return fmt.Errorf("server: %w", err)
 	}
 

@@ -22,8 +22,15 @@ func Log(next http.Handler, l zerolog.Logger) http.Handler {
 			return
 		}
 
-		l.Info().Str("header", hs.String()).Str("body", string(bb)).Msg("request")
+		rc := r.Clone(r.Context())
+		rc.Body = io.NopCloser(bytes.NewReader(bb))
 
-		next.ServeHTTP(w, &http.Request{Body: io.NopCloser(bytes.NewReader(hs.Bytes()))})
+		l.Info().
+			Str("method", r.Method).
+			Str("header", hs.String()).
+			Str("body", string(bb)).
+			Msg("request")
+
+		next.ServeHTTP(w, rc)
 	})
 }

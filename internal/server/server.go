@@ -14,16 +14,21 @@ import (
 )
 
 type Server struct {
-	cfg Config
-	srv *http.Server
-	l   zerolog.Logger
+	c Config
+	s *http.Server
+	l zerolog.Logger
 }
 
 func New(cfg Config, l zerolog.Logger) *Server {
-	hdl := handler.New(l)
-
 	mux := http.NewServeMux()
-	mux.Handle("/", middleware.Log(hdl, l))
+	hdl := middleware.Auth(handler.New(l), cfg.AuthToken, l)
+
+	if cfg.Debug {
+		l.Warn().Msg("debug mode enabled")
+		mux.Handle("/", middleware.Log(hdl, l))
+	} else {
+		mux.Handle("/", hdl)
+	}
 
 	srv := &http.Server{
 		Addr:        cfg.Address,
@@ -32,9 +37,9 @@ func New(cfg Config, l zerolog.Logger) *Server {
 	}
 
 	return &Server{
-		cfg: cfg,
-		srv: srv,
-		l:   l,
+		c: cfg,
+		s: srv,
+		l: l,
 	}
 }
 
@@ -42,18 +47,22 @@ func (s *Server) Run(ctx context.Context) error {
 	go func() {
 		<-ctx.Done()
 
-		if errF := s.srv.Close(); errF != nil {
+		if errF := s.s.Close(); errF != nil {
 			s.l.Error().Err(errF).Msg("server close failed")
 		}
 	}()
 
-	s.l.Info().Str("addr", s.cfg.Address).Msg("server is starting")
+	s.l.Info().Str("addr", s.c.Address).Msg("server is starting")
 
-	if err := s.srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		return fmt.Errorf("ListenAndServe failed: %w", err)
+	if s.c.AuthToken == "" {
+		s.l.Warn().Msg("empty auth token, should be used only for development purposes")
 	}
 
-	s.l.Info().Str("addr", s.cfg.Address).Msg("server stopped")
+	if err := s.s.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		return fmt.Errorf("serve failed: %w", err)
+	}
+
+	s.l.Info().Str("addr", s.c.Address).Msg("server stopped")
 
 	return nil
 }
